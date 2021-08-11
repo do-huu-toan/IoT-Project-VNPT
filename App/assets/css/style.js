@@ -31,6 +31,7 @@ export const styles = StyleSheet.create({
         marginBottom: 10,
     },
     label: {
+
         color: "#7d7e79",
         fontSize: 16,
         lineHeight: 30,
@@ -61,4 +62,15 @@ export const styles = StyleSheet.create({
         fontSize: 18,
         textAlign: "center",
     },
+    footer: {
+        margin: 20,
+        flexDirection: "row",
+        justifyContent: "flex-end",
+        alignItems: "center"
+    },
+    footer_btn: {
+        color: "#000",
+        backgroundColor: "#fff",
+
+    }
 });

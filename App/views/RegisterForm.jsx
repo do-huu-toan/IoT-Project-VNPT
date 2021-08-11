@@ -1,7 +1,7 @@
 import React from "react";
 import {
   SafeAreaView,
-  View,
+  View,StyleSheet,
   Text,
   TouchableOpacity,
   TextInput,
@@ -12,78 +12,50 @@ import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view
 import { Formik } from "formik";
 import { validationSchemaRegister } from "../assets/js/validation";
 import { styles } from "../assets/css/style";
+import { style_background } from "../assets/css/style_background";
 import FormField from "../components/FormField";
 import * as SecureStore from 'expo-secure-store';
+import Background from "./Background";
 
 
-async function getValueFor(key) {
-  let result = await SecureStore.getItemAsync(key);
-  if (result) {
-    alert("🔐 Here's your value 🔐 \n" + result);
-  } else {
-    alert('No values stored under that key.');
-  }
-}
-async function onSubmitHandler(values) {
-  
-    await SecureStore.setItemAsync(values.userName,values.password);
-  
-}
 
-function isFormValid(isValid, touched) {
-  return isValid && Object.keys(touched).length !== 0;
-}
-
-export default function RegisterForm() {
+export default function RegisterForm({navigation}) {
   
   return (
     <>
-      <SafeAreaView style={styles.topSafeArea} />
+      <SafeAreaView  />
 
       <StatusBar style="light" />
 
-      <SafeAreaView style={styles.container}>
-        <View style={styles.header}>
-          <Text style={styles.headerText}>Register</Text>
-        </View>
+      <SafeAreaView style={{flex:1}}>
 
-        {/* https://github.com/APSL/react-native-keyboard-aware-scroll-view */}
         <KeyboardAwareScrollView
-          style={styles.content}
+          style={{flex:1}}
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
           extraScrollHeight={150}
         >
-          {/* https://formik.org/docs/overview */}
+         
           <Formik
             initialValues={{
-              firstName: "",
-              lastName: "",
+              userName:"",
               email: "",
               password: "",
               confirmPassword: "",
             }}
+            enableReinitialize
             onSubmit={onSubmitHandler}
             validationSchema={validationSchemaRegister}
           >
             {({
-              handleChange,
-              handleBlur,
-              handleSubmit,
-              values,
-              errors,
-              touched,
-              isValid,
+              handleChange,handleBlur,handleSubmit,
+              values,errors,touched,isValid,
             }) => (
               <>
-                <TextInput
-                  style={styles.textInput}
-                  onSubmitEditing={event => {
-                    getValueFor(event.nativeEvent.text);
-                  }}
-                  placeholder="Enter the key for the value you want to get"
-                />
-                <FormField
+                <Background/>
+                <View style={style_background.form}>
+                  <Text style={style_background.textForm}>Đăng ký tài khoản</Text>
+                  <FormField
                   field="userName"
                   label="userName"
                   autoCapitalize="words"
@@ -134,15 +106,24 @@ export default function RegisterForm() {
                 >
                   <View
                     style={[
-                      styles.button,
+                      style_background.btn,
                       {
                         opacity: isFormValid(isValid, touched) ? 1 : 0.5,
                       },
                     ]}
                   >
-                    <Text style={styles.buttonText}>SUBMIT</Text>
+                    <Text style={style_background.buttonText}>SUBMIT</Text>
                   </View>
                 </TouchableOpacity>
+                <View style={style_background.row}>
+                  <Text style={{color:"#fff"}}>bạn đã có tài khoản</Text>
+                  <TouchableOpacity onPress={() => navigation.navigate('login')}>
+                    <Text style={style_background.link}>đăng nhập</Text>
+                  </TouchableOpacity>
+                </View>
+                </View>
+                
+                
               </>
             )}
           </Formik>
@@ -151,3 +132,22 @@ export default function RegisterForm() {
     </>
   );
 }
+
+async function getValueFor(key) {
+  let result = await SecureStore.getItemAsync(key);
+  if (result) {
+    alert("🔐 Here's your value 🔐 \n" + result);
+  } else {
+    alert('No values stored under that key.');
+  }
+}
+async function onSubmitHandler(values) {
+  
+    await SecureStore.setItemAsync(values.userName,values.password);
+  
+}
+
+function isFormValid(isValid, touched) {
+  return isValid && Object.keys(touched).length !== 0;
+}
+
