@@ -43,11 +43,15 @@ byte degree[8] = {
 String str;
 bool connectwifi = false;
 int SoLuongWifi;
+
 //khai báo biến wifi station mode
 String Nssid;
 String Npass ;
 String SSID = "";
 String PASSWORD = "";
+
+//Biến tokem
+String TOKEN = "";
 
 //Khai báo biến wifi accesspoint mode
 const char* soft_ssid = "ESP32-AccessPoint";
@@ -128,9 +132,9 @@ String processor(const String& var) {
   return String();
 }
 
-//Xóa dữ liệu EEPROM
-void XoaEEPROM() {
-  Serial.println("Xoa EEPROM");
+//Xóa dữ liệu wifi EEPROM
+void XoaEEPROM_WIFI() {
+  Serial.println("Xoa wifi trong EEPROM");
   for (int i = 0;i < 96; i++)
   {
     EEPROM.write(i,0);
@@ -138,9 +142,18 @@ void XoaEEPROM() {
   }
 }
 
-//Lưu vào EEPROM
-void GhiEEPROM(String ssid, String pass) {
-  XoaEEPROM();
+// Xóa token trong EEPROM
+void XoaEEPROM_TOKEN() {
+  Serial.println("Xoa token trong EEPROM");
+  for(int i = 96;i<512;i++) {
+    EEPROM.write(i,0);
+    delay(10);
+  }
+}
+
+//Lưu vlaue wifi vào EEPROM
+void GhiEEPROM_WIFI(String ssid, String pass) {
+  XoaEEPROM_WIFI();
   //Lưu dữ liệu ssid
   for (int i = 0; i < ssid.length(); i++) {
     EEPROM.write(i, ssid[i]);
@@ -151,12 +164,23 @@ void GhiEEPROM(String ssid, String pass) {
   }
   //lưu lại các thay đổi trong EEPROM
   EEPROM.commit();
-  Serial.println("đã lưu");
+  Serial.println("Da luu wifi");
+  delay(500);
+}
+
+// Lưu token vào EEPROM
+void GhiEEPROM_TOKEN(String token) {
+  XoaEEPROM_TOKEN();
+  for (int i = 96;i < 512; i++) {
+    EEPROM.write(i,token[i]);
+  }
+  EEPROM.commit();
+  Serial.println("Da luu token");
   delay(500);
 }
 
 //Đọc giữ liệu từ EEPROM
-void DocEEPROM() {
+void DocEEPROM_WIFI() {
   for (int i = 0; i < 32; i++)
   {
     SSID += char(EEPROM.read(i));
@@ -176,9 +200,9 @@ void AccessPoint() {
 }
 // Connect Wifi
 void ConnectWifi() {
-  DocEEPROM();
+  DocEEPROM_WIFI();
   int dem =0;
-  WiFi.mode(WIFI_AP_STA);
+  WiFi.mode(WIFI_STA);
   WiFi.disconnect();
   WiFi.begin(SSID.c_str(),PASSWORD.c_str()); 
   while (WiFi.status()!= WL_CONNECTED){
@@ -300,8 +324,8 @@ void setup() {
         Npass = request->getParam("passWifi")->value();
       }
       Serial.println(Nssid +"\n" + Npass);
-      GhiEEPROM(Nssid,Npass);
-      DocEEPROM();
+      GhiEEPROM_WIFI(Nssid,Npass);
+      DocEEPROM_WIFI();
       WiFi.begin(Nssid.c_str(),Npass.c_str());
       delay(3000);
       if(WiFi.status() == WL_CONNECTED){
@@ -323,7 +347,7 @@ void setup() {
 
 void loop() {
   read_DHT();
-  read_GP2Y1014AU();
+  //read_GP2Y1014AU();
   ON_OFF();
   delay(1000);
 }
