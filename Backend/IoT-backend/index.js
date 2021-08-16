@@ -28,13 +28,14 @@ else{
   db.sync({force: false})
 }
 
-app.use(helmet());
+//app.use(helmet());
 app.use(cookieParser());
 app.use(express.static('public'));
 app.set('views', 'view');
 app.set('view engine', 'ejs');
 
 app.use(morgan('combined'));
+
 app.use(express.urlencoded({
   limit: '50mb'
 }));
