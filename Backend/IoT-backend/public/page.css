@@ -1,0 +1,13 @@
+.tittle{
+    padding-bottom: 20px;
+    margin-bottom: 30px;
+    border-bottom: 2px #1ba1e2 solid;
+    font-weight: 500;
+}
+
+.page-content{
+    background-color: white;
+}
+body{
+    background-color: #f0f1f5;
+}

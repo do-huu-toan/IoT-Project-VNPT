@@ -1,0 +1,13 @@
+.btn_submit_login{
+    margin-top: 10px;
+    display: flex;
+    justify-content: center;
+}
+.login-card{
+    
+    width: 30%;
+    margin: auto;
+}
+.submit-login{
+    margin-right: 5px;
+}

@@ -1,0 +1,38 @@
+.header-item-post{
+    border-bottom: 2px #1ba1e2 solid
+
+}
+.body-item-post{
+    width: 100%;
+    display: flex;
+}
+.summary-post{
+    align-items: center;
+    display: flex;
+    width: 100%;
+}
+.parent-avatar{
+    
+    min-width: 170px;
+    height: auto;
+    margin: 2rem;
+    display: flex;
+    background-color: beige;
+}
+.avatar-post{
+    max-width: 170px;
+    height: auto;
+}
+.list-post{
+    padding: 20px;
+    width: 100%;
+}
+
+.tittle-post{
+    font-weight: 500;
+    color: #FA6800;
+}
+
+.item-post{
+    margin-bottom: 100px;
+}

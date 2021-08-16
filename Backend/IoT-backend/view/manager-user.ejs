@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trang chủ</title>
+
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
+
+    <link rel="stylesheet" href="/index.css">
+
+    <!-- Sidebar css -->
+    <!-- Bootstrap CSS CDN -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.0/css/bootstrap.min.css"
+        integrity="sha384-9gVQ4dYFwwWSjIDZnLEWnxCjeSWFphJiwGPXr1jddIhOegiu1FwO5qRGvFXOdJZ4" crossorigin="anonymous">
+    <!-- Our Custom CSS -->
+    <link rel="stylesheet" href="/style5.css">
+
+    <!-- Font Awesome JS -->
+
+
+</head>
+
+<body>
+    <div class="wrapper">
+        <!-- Sidebar Holder -->
+        <nav id="sidebar">
+            <div class="sidebar-header">
+                <h3>IoT System Manager</h3>
+            </div>
+
+            <br/>
+                <i><h5>Xin chào, <%=username %> !</h5></i>
+            <ul class="list-unstyled components">
+                <li>
+                    <a href="/manager">Home</a>
+                </li>
+                <li class="active">
+                    <a href="/user/manager" data-toggle="collapse" aria-expanded="false">Quản lý user</a>
+                </li>
+
+                <li>
+                    <a href="#">Quản lý thiết bị</a>
+                </li>
+
+                <li>
+                    <a href="#">Contact</a>
+                </li>
+                <li>
+                    <a href="/logout">Đăng xuất</a>
+                </li>
+            </ul>
+        </nav>
+
+        <!-- Page Content Holder -->
+        <div id="content">
+
+            <nav class="navbar navbar-expand-lg navbar-light bg-light">
+                <div class="container-fluid">
+
+                    <button type="button" id="sidebarCollapse" class="navbar-btn">
+                        <span></span>
+                        <span></span>
+                        <span></span>
+                    </button>
+                    <button class="btn btn-dark d-inline-block d-lg-none ml-auto" type="button" data-toggle="collapse"
+                        data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent"
+                        aria-expanded="false" aria-label="Toggle navigation">
+                        <i class="fas fa-align-justify"></i>
+                    </button>
+
+
+                    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+                        <!--
+                        <ul class="nav navbar-nav ml-auto">
+                            <li class="nav-item active">
+                                <a class="nav-link" href="#">Page</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="#">Page</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="#">Page</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="#">Page</a>
+                            </li>
+                        </ul>
+                        -->
+                    </div>
+                </div>
+            </nav>
+            <div class="container">
+                <h1>Đây là quản lý user</h1>
+                <div class="table-dht">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th scope="col">
+                                    <h3>STT</h3>
+                                </th>
+                                <th scope="col">
+                                    <h3>Usename</h3>
+                                </th>
+                                <th scope="col">
+                                    <h3>Quyền</h3>
+                                </th>
+                                <th scope="col">
+                                    <h3>Chỉnh sửa</h3>
+                                </th>
+                            </tr>
+                        </thead>
+
+
+
+                        <tbody>
+                            <!--EJS-->
+                                <tr>
+                                    <% for(var i=0;i < users.length; i++) { %>
+                                        <th scope="row">
+                                            <h5>
+                                                <%= i+1 %>
+                                            </h5>
+                                        </th>
+                                        <td>
+                                            <%= users[i].usename %>
+                                        </td>
+                                        <td>
+                                            <select class="form-select" aria-label="Default select example">
+
+                                                <% for(var j=0;j < roles.length; j++) { %>
+                                                    <% if(roles[j].role==users[i].role) { %>
+                                                        <option selected>
+                                                            <%= users[i].role %>
+                                                        </option>
+                                                        <% continue %>
+                                                            <%}%>
+                                                                <option>
+                                                                    <%= roles[j].role %>
+                                                                </option>
+                                                                <%}%>
+                                            </select>
+                                        </td>
+                                        <td>
+                                            <button type="button" class="btn btn-primary">
+                                                <p class="btn-delete-label">Lưu</p>
+                                            </button>
+                                            <a href="/user/api/delete?id=<%= users[i].id%>">
+                                                <button type="button" class="btn btn-danger">
+                                                    <p class="btn-delete-label">Delete</p>
+                                                </button>
+                                            </a>
+                                        </td>
+                                </tr>
+                                <%}%>
+                                        <!--END-->
+
+                        </tbody>
+                    </table>
+                </div>
+                <!--Add User-->
+                <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#exampleModal">
+                    Thêm user
+                </button>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Button trigger modal -->
+
+
+    <!-- Modal add user -->
+    <div class="modal fade" id="exampleModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel"
+        aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3 class="modal-title" id="exampleModalLabel">Thêm user</h3>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <form action="/user/create" , method="POST">
+                        <div class="form-group">
+                            <label for="Usename">Usename</label>
+                            <input type="usename" class="form-control" id="usename" name="usename">
+                        </div>
+                        <div class="form-group">
+                            <label for="pwd">Password:</label>
+                            <input type="password" class="form-control" id="pwd" name="password">
+                        </div>
+                        <div class="form-group">
+                            <label for="pwd">Quyền:</label>
+                            <select class="form-select" aria-label="Default select example" id="role" name="role">
+                                <% for(var j=0;j < roles.length; j++) { %>
+                                    <option value="<%= roles[j].role %>">
+                                        <%= roles[j].role %>
+                                    </option>
+                                    <%}%>
+                            </select>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-dismiss="modal">Hủy</button>
+                            <button type="submit" class="btn btn-primary">Thêm</button>
+                        </div>
+                    </form>
+
+                </div>
+
+            </div>
+
+        </div>
+    </div>
+    </div>
+    <!--End Modal add user-->
+
+    <!-- jQuery CDN - Slim version (=without AJAX) -->
+    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"
+        integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo"
+        crossorigin="anonymous"></script>
+    <!-- Popper.JS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.0/umd/popper.min.js"
+        integrity="sha384-cs/chFZiN24E4KMATLdqdvsezGxaGsi4hLGOzlXwp5UZB1LY//20VyM2taTB4QvJ"
+        crossorigin="anonymous"></script>
+    <!-- Bootstrap JS -->
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.0/js/bootstrap.min.js"
+        integrity="sha384-uefMccjFJAIv6A+rW+L4AHf99KvxDjWSu1z9VI8SKNVmz4sk7buKt/6v9KI65qnm"
+        crossorigin="anonymous"></script>
+
+    <script type="text/javascript">
+        $(document).ready(function () {
+            $('#sidebarCollapse').on('click', function () {
+                $('#sidebar').toggleClass('active');
+                $(this).toggleClass('active');
+            });
+        });
+    </script>
+</body>
+
+</html>
