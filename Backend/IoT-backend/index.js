@@ -10,7 +10,11 @@ const isProduction = process.env.NODE_ENV === 'production';
 const authMiddleware = require('./middleware/auth.middleware');
 const bodyParser = require('body-parser');
 
+const cors = require('cors');
 
+const corsOption = {
+  origin: '*'
+}
 
 const init = process.env.DB_INIT;
 
