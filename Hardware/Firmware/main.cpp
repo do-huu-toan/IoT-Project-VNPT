@@ -15,7 +15,7 @@ DHT dht(DHTPIN, DHTTYPE);
 LiquidCrystal_I2C lcd(0x27, 16, 2);
 AsyncWebServer server(80);
 
-int denbao = 13,trangthai = 12, coi = 11, button = 15;
+int denbao = 13,trangthai = 12, coi = 14, button = 15;
 int n,dem = 0, macdinh = 1;
 float h,t;
 int measurePin = 11;
