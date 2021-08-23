@@ -9,11 +9,4 @@ const db = new Sequelize(process.env.DB_NAME, process.env.DB_USER, process.env.D
 db.authenticate()
     .then(() => console.log("Connect DB Successful !"))
     .catch(() => console.log("Kiem tra lai DB"));
-
-
-
-
-
-
-
 module.exports = db;

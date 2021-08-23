@@ -34,20 +34,22 @@
                 <h3>IoT System Manager</h3>
             </div>
 
-            <br/>
-                <i><h5>Xin chào, <%=username %> !</h5></i>
+            <br />
+            <i>
+                <h5>Xin chào, <%=username %> !</h5>
+            </i>
             <ul class="list-unstyled components">
                 <li>
                     <a href="/manager">Home</a>
                 </li>
-                <li class="active">
-                    <a href="/user/manager" data-toggle="collapse" aria-expanded="false">Quản lý user</a>
+                <li>
+                    <a href="/user/manager">Quản lý user</a>
                 </li>
 
-                <li>
-                    <a href="/device">Quản lý thiết bị</a>
+                <li class="active">
+                    <a href="device" data-toggle="collapse" aria-expanded="false">Quản lý thiết bị</a>
                 </li>
-                
+
                 <li>
                     <a href="#">Contact</a>
                 </li>
@@ -96,7 +98,7 @@
                 </div>
             </nav>
             <div class="container">
-                <h1>Đây là quản lý user</h1>
+                <h1>Đây là quản lý thiết bị</h1>
                 <div class="table-dht">
                     <table class="table table-striped">
                         <thead>
@@ -105,67 +107,65 @@
                                     <h3>STT</h3>
                                 </th>
                                 <th scope="col">
-                                    <h3>Usename</h3>
+                                    <h3>Thiết bị</h3>
                                 </th>
                                 <th scope="col">
-                                    <h3>Quyền</h3>
+                                    <h3>Trạng thái</h3>
                                 </th>
                                 <th scope="col">
-                                    <h3>Chỉnh sửa</h3>
+                                    <h3>Secret key</h3>
+                                </th>
+                                <th scope="col">
+                                    <h3>Tùy chọn</h3>
                                 </th>
                             </tr>
                         </thead>
 
 
 
-                        <tbody>
+                        <tbody id="list-devices">
                             <!--EJS-->
-                                <tr>
-                                    <% for(var i=0;i < users.length; i++) { %>
-                                        <th scope="row">
-                                            <h5>
-                                                <%= i+1 %>
-                                            </h5>
-                                        </th>
-                                        <td>
-                                            <%= users[i].usename %>
-                                        </td>
-                                        <td>
-                                            <select class="form-select" aria-label="Default select example">
+                            <% for(var i=0;i<devices.length;i++){ %>
+                                <tr class="<%=devices[i].id%> ">
 
-                                                <% for(var j=0;j < roles.length; j++) { %>
-                                                    <% if(roles[j].role==users[i].role) { %>
-                                                        <option selected>
-                                                            <%= users[i].role %>
-                                                        </option>
-                                                        <% continue %>
-                                                            <%}%>
-                                                                <option>
-                                                                    <%= roles[j].role %>
-                                                                </option>
-                                                                <%}%>
-                                            </select>
-                                        </td>
-                                        <td>
-                                            <button type="button" class="btn btn-primary">
-                                                <p class="btn-delete-label">Lưu</p>
+                                    <th scope="row">
+                                        <h5>
+                                            <%=i+1 %>
+                                        </h5>
+                                    </th>
+                                    <td>
+                                        <%=devices[i].name %>
+                                    </td>
+
+                                    <td class="status-device">
+                                        No Connect
+                                    </td>
+
+                                    <td>
+                                        <div>
+                                            <%=devices[i].id %>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <button type="button" class="btn btn-primary">
+                                            <p class="btn-delete-label">Chi tiết</p>
+                                        </button>
+                                        <a href="#">
+                                            <button type="button" class="btn btn-danger">
+                                                <p class="btn-delete-label">Delete</p>
                                             </button>
-                                            <a href="/user/api/delete?id=<%= users[i].id%>">
-                                                <button type="button" class="btn btn-danger">
-                                                    <p class="btn-delete-label">Delete</p>
-                                                </button>
-                                            </a>
-                                        </td>
+                                        </a>
+                                    </td>
+                                    <% } %>
                                 </tr>
-                                <%}%>
-                                        <!--END-->
+                                <!--END-->
 
                         </tbody>
                     </table>
                 </div>
                 <!--Add User-->
                 <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#exampleModal">
-                    Thêm user
+                    Thêm thiết bị
                 </button>
             </div>
         </div>
@@ -181,30 +181,16 @@
         <div class="modal-dialog" role="document">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h3 class="modal-title" id="exampleModalLabel">Thêm user</h3>
+                    <h3 class="modal-title" id="exampleModalLabel">Thêm thiết bị mới</h3>
                     <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                         <span aria-hidden="true">&times;</span>
                     </button>
                 </div>
                 <div class="modal-body">
-                    <form action="/user/create" , method="POST">
+                    <form action="/device/create" , method="POST">
                         <div class="form-group">
-                            <label for="Usename">Usename</label>
-                            <input type="usename" class="form-control" id="usename" name="usename">
-                        </div>
-                        <div class="form-group">
-                            <label for="pwd">Password:</label>
-                            <input type="password" class="form-control" id="pwd" name="password">
-                        </div>
-                        <div class="form-group">
-                            <label for="pwd">Quyền:</label>
-                            <select class="form-select" aria-label="Default select example" id="role" name="role">
-                                <% for(var j=0;j < roles.length; j++) { %>
-                                    <option value="<%= roles[j].role %>">
-                                        <%= roles[j].role %>
-                                    </option>
-                                    <%}%>
-                            </select>
+                            <label for="Usename">Tên thiết bị</label>
+                            <input type="usename" class="form-control" id="usename" name="name">
                         </div>
                         <div class="modal-footer">
                             <button type="button" class="btn btn-secondary" data-dismiss="modal">Hủy</button>
@@ -241,6 +227,57 @@
                 $(this).toggleClass('active');
             });
         });
+    </script>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        const token = document.cookie
+            .split('; ')
+            .find(row => row.startsWith('token='))
+            .split('=')[1];
+        console.log('Token:', token);
+
+        const socket = io('/webapp', {
+            reconnectionDelayMax: 10000,
+            query: {
+                token: token
+            }
+        });
+
+        socket.on('device-online', (data) => {
+            if (data) {
+                const devices = document.getElementById("list-devices");
+
+                for (var i = 0; i < devices.childElementCount; i++) {
+                    const className = devices.children[i].className;
+                    const result = searchIdInData(className, data);
+                    if(result){
+                        const statusDevice = devices.children[i].getElementsByClassName('status-device');
+                        statusDevice[0].innerHTML = "Connected"
+                    }
+                    else
+                    {
+                        const statusDevice = devices.children[i].getElementsByClassName('status-device');
+                        statusDevice[0].innerHTML = "No Connect";
+                    }
+                }
+            }
+        })
+
+
+        const searchIdInData = (id, data) => {
+            let result = false;
+            const str1 = id;
+            for(let i = 0;i<data.length;i++){
+                if(str1.indexOf(data[i].deviceId) == 0)
+                {
+                    result = true; 
+                    break;
+                }
+            }
+            return result
+        }
+
     </script>
 </body>
 

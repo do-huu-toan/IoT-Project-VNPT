@@ -21,6 +21,7 @@ var authenicate = async (req, res, next) => {
         var encode = checkToken(req.cookies.token);
         if (encode) {
             const userByToken = await User.findByPk(encode.id);
+
             if (userByToken) {
                 next();
             }
@@ -45,7 +46,7 @@ var authenicateLogin = (req, res, next) => {
     if (req.cookies.token) {
         var encode = checkToken(req.cookies.token);
         if (encode) {
-            res.redirect('/');
+            res.redirect('/user/manager');
         }
         else {
             res.clearCookie("token");
@@ -64,8 +65,21 @@ async function getUsernameByToken(req) {
     //console.log(user.usename);
     return user.usename;
 }
+
+async function getUsernameByTokenString(token) {
+    var encode = checkToken(token);
+    const user = await User.findByPk(encode.id)
+    //console.log(user.usename);
+    return user.usename;
+}
+
 async function getIdByToken(req){
     var encode = checkToken(req.cookies.token);
+    return encode.id;
+}
+
+const getIdByTokenString = async (token) => {
+    var encode =checkToken(token);
     return encode.id;
 }
 module.exports = {
@@ -73,5 +87,7 @@ module.exports = {
     authenicateLogin,
     checkToken,
     getUsernameByToken,
-    getIdByToken
+    getIdByToken,
+    getIdByTokenString,
+    getUsernameByTokenString
 }
