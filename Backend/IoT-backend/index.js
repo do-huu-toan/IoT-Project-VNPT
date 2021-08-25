@@ -63,7 +63,7 @@ const CORS = require('./middleware/cors.middleware')
 app.use('/auth', AuthRoute);
 app.use('/role', RoleRoute);
 app.use('/user', authMiddleware.authenicate, UserRoute);
-app.use('/device', CORS.api,DeviceRoute)
+app.use('/device', CORS.api, DeviceRoute)
 
 
 app.get('/login', authMiddleware.authenicateLogin, (req, res) => {
@@ -89,6 +89,7 @@ app.get('/manager', authMiddleware.authenicate, async (req, res) => {
 let device_room = [];
 
 
+
 device_nsp.use(async (socket, next) => {
   //Kiểm tra xem có thiết bị chưa
   const deviceId = socket.handshake.query.token;
@@ -105,6 +106,9 @@ device_nsp.use(async (socket, next) => {
 device_nsp.on('connection', async (socket) => {
   //Có 1 thiết bị được kết nối vào thì:
   //Tìm owner:
+
+  console.log("Device conneceted")
+
   const deviceId = socket.handshake.query.token;
 
   const deviceFound = await Device.findByPk(deviceId);
@@ -126,10 +130,20 @@ device_nsp.on('connection', async (socket) => {
 
   web_and_mobile_nsp.in(username).emit('device-online', device_room[username])
 
+  socket.on('event', (data)=>{
+    web_and_mobile_nsp.in(username).emit('devive-data', {
+      id: deviceId,
+      data: data
+    });
+  })
+
+  socket.onAny((eventName, ...args) => {
+    console.log(eventName, args)
+  });
 
   socket.on('disconnect', () => {
     console.log(socket.id + " disconnect");
-    const index = device_room[username].findIndex(device => {return device.deviceId === deviceId});
+    const index = device_room[username].findIndex(device => { return device.deviceId === deviceId });
     device_room[username].splice(index, 1);
     web_and_mobile_nsp.in(username).emit('device-online', device_room[username])
   })

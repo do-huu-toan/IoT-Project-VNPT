@@ -13,6 +13,7 @@
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
 
     <link rel="stylesheet" href="/index.css">
+    <link rel="stylesheet" href="/device.css">
 
     <!-- Sidebar css -->
     <!-- Bootstrap CSS CDN -->
@@ -21,7 +22,7 @@
     <!-- Our Custom CSS -->
     <link rel="stylesheet" href="/style5.css">
 
-    <!-- Font Awesome JS -->
+
 
 
 </head>
@@ -126,40 +127,41 @@
                         <tbody id="list-devices">
                             <!--EJS-->
                             <% for(var i=0;i<devices.length;i++){ %>
-                                <tr class="<%=devices[i].id%> ">
+                                <div>
+                                    <tr class="<%=devices[i].id%> ">
 
-                                    <th scope="row">
-                                        <h5>
-                                            <%=i+1 %>
-                                        </h5>
-                                    </th>
-                                    <td>
-                                        <%=devices[i].name %>
-                                    </td>
+                                        <th scope="row">
+                                            <h5>
+                                                <%=i+1 %>
+                                            </h5>
+                                        </th>
+                                        <td>
+                                            <%=devices[i].name %>
+                                        </td>
 
-                                    <td class="status-device">
-                                        No Connect
-                                    </td>
+                                        <td class="status-device">
+                                            No Connect
+                                        </td>
 
-                                    <td>
-                                        <div>
-                                            <%=devices[i].id %>
-                                        </div>
-                                    </td>
-                                    <td>
-                                        <button type="button" class="btn btn-primary">
-                                            <p class="btn-delete-label">Chi tiết</p>
-                                        </button>
-                                        <a href="#">
-                                            <button type="button" class="btn btn-danger">
-                                                <p class="btn-delete-label">Delete</p>
+                                        <td>
+                                            <div>
+                                                <%=devices[i].id %>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <button type="button" class="btn btn-primary">
+                                                <p class="btn-delete-label">Chi tiết</p>
                                             </button>
-                                        </a>
-                                    </td>
-                                    <% } %>
-                                </tr>
-                                <!--END-->
-
+                                            <a href="#">
+                                                <button type="button" class="btn btn-danger">
+                                                    <p class="btn-delete-label">Delete</p>
+                                                </button>
+                                            </a>
+                                        </td>
+                                    </tr>
+                                </div>
+                                <% } %>
+                                    <!--END-->
                         </tbody>
                     </table>
                 </div>
@@ -167,6 +169,12 @@
                 <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#exampleModal">
                     Thêm thiết bị
                 </button>
+
+                <div class="list-devices-data">
+                    <% for(var i=0;i<devices.length;i++){ %>
+                        <div class="device-data data-<%=devices[i].id%>" >Data <%=devices[i].name%> :</div>
+                        <% } %> 
+                </div>
             </div>
         </div>
 
@@ -251,12 +259,11 @@
                 for (var i = 0; i < devices.childElementCount; i++) {
                     const className = devices.children[i].className;
                     const result = searchIdInData(className, data);
-                    if(result){
+                    if (result) {
                         const statusDevice = devices.children[i].getElementsByClassName('status-device');
                         statusDevice[0].innerHTML = "Connected"
                     }
-                    else
-                    {
+                    else {
                         const statusDevice = devices.children[i].getElementsByClassName('status-device');
                         statusDevice[0].innerHTML = "No Connect";
                     }
@@ -264,14 +271,19 @@
             }
         })
 
+        socket.on('devive-data', (data) => {
+           const className = "data-" + data.id;
+           const element = document.getElementsByClassName(className);
+           element[0].innerHTML = JSON.stringify(data.data);
+
+        });
 
         const searchIdInData = (id, data) => {
             let result = false;
             const str1 = id;
-            for(let i = 0;i<data.length;i++){
-                if(str1.indexOf(data[i].deviceId) == 0)
-                {
-                    result = true; 
+            for (let i = 0; i < data.length; i++) {
+                if (str1.indexOf(data[i].deviceId) == 0) {
+                    result = true;
                     break;
                 }
             }
@@ -279,6 +291,7 @@
         }
 
     </script>
+
 </body>
 
 </html>
