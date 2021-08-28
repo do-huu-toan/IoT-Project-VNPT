@@ -1,12 +1,11 @@
-#include <Arduino.h>
 #include <WiFi.h>
 #include <ESPAsyncWebServer.h>
 #include <EEPROM.h>
-#include <SPIFFS.h>
-#include<string.h>
-#include <Wire.h> 
+#include <String.h>
+#include <Wire.h>
 #include <LiquidCrystal_I2C.h>
 #include <DHT.h>
+#include <SocketIOClient.h>
 
 #define DHTPIN 4
 #define DHTTYPE DHT11
@@ -14,12 +13,21 @@
 DHT dht(DHTPIN, DHTTYPE);
 LiquidCrystal_I2C lcd(0x27, 16, 2);
 AsyncWebServer server(80);
+SocketIOClient client;
 
-int denbao = 13,trangthai = 12, coi = 14, button = 15;
-int n,dem = 0, macdinh = 1;
-float h,t;
+int denbao = 13, trangthai = 12, coi = 14, button = 15;
+int n, dem = 0, macdinh = 1;
+float h, t;
+String humi, temp;
+
 int measurePin = 11;
 int ledPower = 10;
+
+int resetWiFi = 20;
+unsigned long waitTime = 5000;
+boolean lastButtonStatus = 0; //Lưu trạng thái của phim reset
+boolean buttonLongPress = 0; // lưu sự kiện của phím reset
+unsigned long lastChangedTime;
 
 unsigned int samplingTime = 280;
 unsigned int deltaTime = 40;
@@ -44,14 +52,21 @@ String str;
 bool connectwifi = false;
 int SoLuongWifi;
 
+char hostname[] = "dht.ddns.net"; //Fix cứng
+int port = 3000; //Fix cứng
+char namespace_esp8266[] = "device";   //Thêm Arduino!
+extern String RID;
+extern String Rname;
+extern String Rcontent;
+unsigned long lasTime;
+
 //khai báo biến wifi station mode
 String Nssid;
 String Npass ;
+String Ntoken;
+String TOKEN = "";
 String SSID = "";
 String PASSWORD = "";
-
-//Biến tokem
-String TOKEN = "";
 
 //Khai báo biến wifi accesspoint mode
 const char* soft_ssid = "ESP32-AccessPoint";
@@ -61,57 +76,59 @@ const char index_html[] PROGMEM = R"rawliteral(
 <!DOCTYPE html>
 <html>
 <head>
-	<meta charset="utf-8">
-	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<title>VNPT-IOT</title>
-	<style >
-		.login{
-			width: 40vw;
-			height: 19vw;
-			border-radius: 10px;
-			border: 1px solid grey;
-			background-color: skyblue;		
-			text-align: center;
-		}
-		h2{
-			color: #868787;
-			font-size: 2.5vw;
-			font-family: sans-serif;
-		}
-		input{
-			width: 35vw;
-			height: 2vw;
-			border-radius: 4px;
-			margin-bottom: 15px;
-			border-radius: 5px;
-			border: 1px solid grey;
-		}
-		button{
-			width: 20vw;
-			height: 2vw;
-			margin-bottom: 10px;
-			border-radius: 5px;
-			background-color: white;
-			color: black;
-		}
-	</style>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>VNPT-IOT</title>
+  <style >
+    .login{
+      width: 1000px;
+      height: 400px;
+      border-radius: 15px;
+      border: 1px solid grey;
+      background-color: skyblue;    
+      text-align: center;
+    }
+    h2{
+      color: #868787;
+      font-size: 50px;
+      font-family: sans-serif;
+    }
+    input{
+      width: 700px;
+      height: 40px;
+      border-radius: 4px;
+      margin-bottom: 15px;
+      border-radius: 5px;
+      border: 1px solid grey;
+    }
+    button{
+      width: 400px;
+      height: 35px;
+      margin-bottom: 10px;
+      border-radius: 5px;
+      background-color: white;
+      color: black;
+    }
+  </style>
 </head>
 <body>
-		<center>
-			<div class="login">
-				<h2>Thiết lập kết nối WiFi</h2>
+    <center>
+      <div class="login">
+        <h2>Thiết lập kết nối WiFi</h2>
         <form action ='/get'>
-			  	<input type="text" name="nameWifi" placeholder="Tên wifi" id="ssid">
-		  		<br>
-		  		<input type="password" name="passWifi" placeholder="Mật khẩu" id="password">
-			  	<br>
-				<button type= 'submit' >Connect</button>
+          <input type="text" name="nameWifi" placeholder="Tên wifi">
+          <br>
+          <input type="password" name="passWifi" placeholder="Mật khẩu">
+          <br>
+      <input type="token" name="Token" placeholder="Token">
+      <br>
+        <button type= 'submit' >Connect</button>
         <form/>
-			</div>
-			<br><br><br>
-			<p>WiFi gần đây</p>
+      </div>
+      <br><br><br>
+      <p>WiFi gần đây</p>
       <p id="wifi">%WIFI%</p>
-		</center>
+    </center>
 </body>
 
 </html>
@@ -132,7 +149,7 @@ String processor(const String& var) {
   return String();
 }
 
-//Xóa dữ liệu wifi EEPROM
+//Xóa dữ liệu EEPROM
 void XoaEEPROM_WIFI() {
   Serial.println("Xoa wifi trong EEPROM");
   for (int i = 0;i < 96; i++)
@@ -140,24 +157,29 @@ void XoaEEPROM_WIFI() {
     EEPROM.write(i,0);
     delay(10);
   }
+  Serial.println("Xoa thanh cong");
 }
 
-// Xóa token trong EEPROM
+//Xóa dữ liệu token EEPROM
 void XoaEEPROM_TOKEN() {
   Serial.println("Xoa token trong EEPROM");
-  for(int i = 96;i<512;i++) {
+  for (int i = 96;i < 396; i++)
+  {
     EEPROM.write(i,0);
     delay(10);
   }
+  Serial.println("Xoa token thanh cong");
 }
 
-//Lưu vlaue wifi vào EEPROM
+//Lưu data EEPROM
 void GhiEEPROM_WIFI(String ssid, String pass) {
   XoaEEPROM_WIFI();
+  Serial.println("Bat dau ghi");
   //Lưu dữ liệu ssid
   for (int i = 0; i < ssid.length(); i++) {
     EEPROM.write(i, ssid[i]);
   }
+  Serial.println("Bat dau ghi 2");
   //Lưu dữ liệu password
   for (int i = 0; i < pass.length(); i++) {
     EEPROM.write(32+i, pass[i]);
@@ -168,14 +190,14 @@ void GhiEEPROM_WIFI(String ssid, String pass) {
   delay(500);
 }
 
-// Lưu token vào EEPROM
 void GhiEEPROM_TOKEN(String token) {
   XoaEEPROM_TOKEN();
-  for (int i = 96;i < 512; i++) {
-    EEPROM.write(i,token[i]);
-  }
+  Serial.println("Token length: " + token.length());
+  for (int i = 0;i < token.length(); i++) {
+    EEPROM.write(96+i,token[i]);
+  }  
+  Serial.println("Da luu TOKEN");
   EEPROM.commit();
-  Serial.println("Da luu token");
   delay(500);
 }
 
@@ -190,7 +212,13 @@ void DocEEPROM_WIFI() {
     PASSWORD += char(EEPROM.read(i));
   }
 }
-
+void DocEEPROM_TOKEN() {
+  Serial.println("Bat dau doc");
+  for (int i = 96; i < 396; i++) {
+    TOKEN +=char(EEPROM.read(i));
+  }
+  Serial.println("Doc xong");
+}
 // AccessPoint Mode
 void AccessPoint() {
   WiFi.mode(WIFI_AP);
@@ -292,6 +320,22 @@ void ON_OFF() {
     check();
    }
 }
+// Hàm reset wifi
+void ResetWiFi() {
+  boolean rs = digitalRead(resetWiFi);
+  if(rs != lastButtonStatus) {
+    lastButtonStatus = rs;
+    lastButtonStatus = millis();
+  }
+  if(millis() - lastButtonStatus > waitTime) {
+    buttonLongPress = rs;
+    lastChangedTime = millis();
+  }
+  if(buttonLongPress == true) {
+    GhiEEPROM_WIFI("","");
+    GhiEEPROM_TOKEN("");
+  }
+}
 
 void setup() {
   Serial.begin(9600);
@@ -305,6 +349,7 @@ void setup() {
   pinMode(denbao,OUTPUT);
   pinMode(trangthai,OUTPUT);
   pinMode(coi,OUTPUT);
+  pinMode(resetWiFi,OUTPUT);
   pinMode(button,INPUT_PULLUP);
   digitalWrite(trangthai,HIGH);
 
@@ -323,9 +368,15 @@ void setup() {
       if (request->hasParam("passWifi")) {
         Npass = request->getParam("passWifi")->value();
       }
-      Serial.println(Nssid +"\n" + Npass);
+      if (request->hasParam("Token")) {
+        Ntoken = request->getParam("Token")->value();
+      }
+      Serial.println(Nssid +"\n" + Npass + '\n' + Ntoken);
+      
       GhiEEPROM_WIFI(Nssid,Npass);
+      GhiEEPROM_TOKEN(Ntoken);
       DocEEPROM_WIFI();
+      DocEEPROM_TOKEN();
       WiFi.begin(Nssid.c_str(),Npass.c_str());
       delay(3000);
       if(WiFi.status() == WL_CONNECTED){
@@ -339,6 +390,15 @@ void setup() {
                           "<br><a href=\"/\">Return to Home Page</a>");
       }
     });
+  } 
+  else {
+    DocEEPROM_TOKEN();
+    Serial.println(TOKEN);
+    client.setToken(TOKEN.c_str());
+    if (!client.connect(hostname, port, namespace_esp8266)) {
+      Serial.println(F("Ket noi den socket server that bai!"));
+      return;
+    }
   }
 
   check();
@@ -347,7 +407,12 @@ void setup() {
 
 void loop() {
   read_DHT();
+  humi = String(h);
+  temp = String(t);
   //read_GP2Y1014AU();
-  ON_OFF();
-  delay(1000);
+  ON_OFF(); // tắt bật cảnh báo
+ // ResetWiFi(); //reset wifi
+  String result = "{\"temp\":\"" + temp + "\",\"humi\":\"" + humi + "\"}";
+  Serial.println(result);
+  client.send("event", result);
 }
