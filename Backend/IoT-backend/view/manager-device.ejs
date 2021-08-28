@@ -22,7 +22,7 @@
     <!-- Our Custom CSS -->
     <link rel="stylesheet" href="/style5.css">
 
-
+    <script src="/plotly.min.js"></script>
 
 
 </head>
@@ -149,8 +149,10 @@
                                             </div>
                                         </td>
                                         <td>
-                                            <button type="button" class="btn btn-primary">
-                                                <p class="btn-delete-label">Chi tiết</p>
+                                            <button type="button" class="btn btn-primary btn-detail"
+                                                id="btn-detail-<%=devices[i].id%>">
+                                                <p class="btn-delete-label">Chi tiết
+                                                </p>
                                             </button>
                                             <a href="#">
                                                 <button type="button" class="btn btn-danger">
@@ -172,9 +174,17 @@
 
                 <div class="list-devices-data">
                     <% for(var i=0;i<devices.length;i++){ %>
-                        <div class="device-data data-<%=devices[i].id%>" >Data <%=devices[i].name%> :</div>
-                        <% } %> 
+                        <div class="device-data data-<%=devices[i].id%>">
+                            <div>Dữ liệu <%=devices[i].name%> : </div>
+                            <div class="data-text-<%=devices[i].id%>"></div>
+                            <div class="chart" id="chart-<%=devices[i].id%>">
+                            </div>
+                        </div>
+
+                        <% } %>
                 </div>
+
+
             </div>
         </div>
 
@@ -214,6 +224,7 @@
     </div>
     </div>
     <!--End Modal add user-->
+    <!--CHART-->
 
     <!-- jQuery CDN - Slim version (=without AJAX) -->
     <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"
@@ -255,7 +266,6 @@
         socket.on('device-online', (data) => {
             if (data) {
                 const devices = document.getElementById("list-devices");
-
                 for (var i = 0; i < devices.childElementCount; i++) {
                     const className = devices.children[i].className;
                     const result = searchIdInData(className, data);
@@ -271,10 +281,46 @@
             }
         })
 
+
+        const listChart = document.getElementsByClassName("chart");
+
+        for (let i = 0; i < listChart.length; i++) {
+            Plotly.newPlot(listChart[i].id, [{
+                y: [0],
+                type: 'line'
+            }]);
+        }
+        /*
+       
+            */
+        var cnt = [];
+        const listDevicesElement = document.getElementById("list-devices");
+        for (let i = 0; i < listDevicesElement.childElementCount; i++) {
+            const key = listDevicesElement.children[i].className;
+            cnt[key] = 0;
+        }
+
+        console.log(cnt);
         socket.on('devive-data', (data) => {
-           const className = "data-" + data.id;
-           const element = document.getElementsByClassName(className);
-           element[0].innerHTML = JSON.stringify(data.data);
+            const className = "data-text-" + data.id;
+            const element = document.getElementsByClassName(className);
+            
+            element[0].innerHTML = JSON.stringify(data.data);
+
+            var temp = parseInt(data.data.temp);
+            Plotly.extendTraces('chart-' + data.id, { y: [[temp]] }, [0]);
+
+            var index = data.id + " ";
+            cnt[index]++;
+            
+            if (cnt[index] > 10) {
+                Plotly.relayout('chart-' + data.id, {
+                    xaxis: {
+                        range: [cnt[index] - 10, cnt[index]]
+                    }
+                });
+            }
+            //console.log(cnt[index]);
 
         });
 
@@ -290,8 +336,40 @@
             return result
         }
 
+        const clickButtonDetailHandler = (id) => {
+            
+            idData = id.replace("btn-detail-", "data-");
+            dataElement = document.getElementsByClassName(idData);
+
+            console.log(dataElement[0])
+
+            if (!dataElement[0].classList.contains("show-data")) {
+                dataElement[0].classList.add("show-data");
+            }
+            else {
+                dataElement[0].classList.remove("show-data");
+            }
+        }
+
+        const addEventClickForDetailButton = () => {
+            const devices = document.getElementById("list-devices");
+            const listButtonDetail = devices.getElementsByClassName("btn-detail")
+
+            for (let i = 0; i < listButtonDetail.length; i++) {
+                listButtonDetail[i].addEventListener('click', () => { clickButtonDetailHandler(listButtonDetail[i].id) });
+            }
+        }
+
+        addEventClickForDetailButton();
+
     </script>
 
+    <script>
+
+
+
+
+    </script>
 </body>
 
 </html>
