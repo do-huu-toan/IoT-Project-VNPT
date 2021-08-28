@@ -24,6 +24,7 @@ int measurePin = 11;
 int ledPower = 10;
 
 int resetWiFi = 20;
+
 unsigned long waitTime = 5000;
 boolean lastButtonStatus = 0; //Lưu trạng thái của phim reset
 boolean buttonLongPress = 0; // lưu sự kiện của phím reset
@@ -32,6 +33,8 @@ unsigned long lastChangedTime;
 unsigned int samplingTime = 280;
 unsigned int deltaTime = 40;
 unsigned int sleepTime = 9680;
+
+unsigned long lastTime;
 
 float voMeasured = 0;
 float calcVoltage = 0;
@@ -279,14 +282,15 @@ void read_DHT(){
   h = dht.readHumidity(); 
   t = dht.readTemperature();
   lcd.setCursor(0,0);
-   lcd.print("H:");
-   lcd.setCursor(2,0);
-   lcd.print(h);
-   lcd.setCursor(8,0);
-   lcd.write(1);
-   lcd.print("C:");
-   lcd.setCursor(11,0);
-   lcd.print(t);
+  lcd.print("H:");
+  lcd.setCursor(2,0);
+  lcd.print(h);
+  lcd.setCursor(8,0);
+  lcd.write(1);
+  lcd.print("C:");
+  lcd.setCursor(11,0);
+  lcd.print(t);
+  delay(2000);
 }
 
 void check() {
@@ -400,7 +404,6 @@ void setup() {
       return;
     }
   }
-
   check();
   server.begin();
 }
