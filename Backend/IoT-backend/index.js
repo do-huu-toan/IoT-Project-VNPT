@@ -63,7 +63,7 @@ const CORS = require('./middleware/cors.middleware')
 app.use('/auth', AuthRoute);
 app.use('/role', RoleRoute);
 app.use('/user', authMiddleware.authenicate, UserRoute);
-app.use('/device', CORS.api, DeviceRoute)
+app.use('/device', CORS.api, authMiddleware.authenicate, DeviceRoute)
 
 
 app.get('/login', authMiddleware.authenicateLogin, (req, res) => {

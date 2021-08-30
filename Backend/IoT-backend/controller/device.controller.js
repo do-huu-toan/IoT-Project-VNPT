@@ -46,7 +46,19 @@ const create = async (req, res, next) => {
 
 }
 
+const getAllDevice = async (req, res, next) => {
+
+    console.log("Run here")
+
+    const userId = await AuthMiddleware.getIdByToken(req);
+    const userFound = await User.findByPk(userId, { include: Device });
+    username = await AuthMiddleware.getUsernameByToken(req);
+
+    return res.status(200).json(userFound.Devices);
+}
+
 module.exports = {
     index,
-    create
+    create,
+    getAllDevice
 }

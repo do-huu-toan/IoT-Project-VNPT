@@ -6,4 +6,6 @@ router.route('/')
     .get(DeviceController.index);
 router.route('/create')
     .post(DeviceController.create);
+router.route('/api')
+    .get(DeviceController.getAllDevice)
 module.exports = router
