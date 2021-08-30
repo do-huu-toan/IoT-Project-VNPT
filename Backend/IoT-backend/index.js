@@ -9,6 +9,9 @@ const helmet = require("helmet");
 const isProduction = process.env.NODE_ENV === 'production';
 const authMiddleware = require('./middleware/auth.middleware');
 
+
+
+
 const http = require('http');
 const server = http.createServer(app);
 const io = require('socket.io')(server, {
@@ -34,6 +37,16 @@ if (init) {
 else {
   db.sync({ force: false })
 }
+
+
+//CORS:
+
+var cors = require('cors')
+var corsOptions = {
+  origin: '*',
+  optionsSuccessStatus: 200 // some legacy browsers (IE11, various SmartTVs) choke on 204
+}
+app.use(cors(corsOptions))
 
 //app.use(helmet());
 app.use(cookieParser());
