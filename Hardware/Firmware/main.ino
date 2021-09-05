@@ -7,24 +7,33 @@
 #include <DHT.h>
 #include <SocketIOClient.h>
 
-#define DHTPIN 4
+#define DHTPIN 36
 #define DHTTYPE DHT11
+
+TaskHandle_t Task1;
+TaskHandle_t Task2;
+TaskHandle_t Task3;
 
 DHT dht(DHTPIN, DHTTYPE);
 LiquidCrystal_I2C lcd(0x27, 16, 2);
 AsyncWebServer server(80);
 SocketIOClient client;
 
-int denbao = 13, trangthai = 12, coi = 14, button = 15;
-int n, dem = 0, macdinh = 1;
-float h, t;
-String humi, temp;
+int denbao = 14, trangthai = 27, coi = 12;
 
-int measurePin = 11;
-int ledPower = 10;
+int button = 34;
+unsigned long timeOFF = 2000; // thời gian chờ tắt cảnh báo 2s
+boolean lastButton = 0; // lưu trạng thái của phím tắt cảnh báo
+boolean buttonPress = 0; // lưu sự kiện của phím tắt cảnh báo
+unsigned long Time;
 
-int resetWiFi = 20;
+float h, t; // khai báo biến độ ẩm, nhiệt độ
+String humi, temp; // chuỗi độ ẩm, nhiệt độ
 
+int measurePin = 26;
+int ledPower = 25;
+
+int resetWiFi = 35;
 unsigned long waitTime = 5000;
 boolean lastButtonStatus = 0; //Lưu trạng thái của phim reset
 boolean buttonLongPress = 0; // lưu sự kiện của phím reset
@@ -33,8 +42,6 @@ unsigned long lastChangedTime;
 unsigned int samplingTime = 280;
 unsigned int deltaTime = 40;
 unsigned int sleepTime = 9680;
-
-unsigned long lastTime;
 
 float voMeasured = 0;
 float calcVoltage = 0;
@@ -61,7 +68,7 @@ char namespace_esp8266[] = "device";   //Thêm Arduino!
 extern String RID;
 extern String Rname;
 extern String Rcontent;
-unsigned long lasTime;
+unsigned long lastTime;
 
 //khai báo biến wifi station mode
 String Nssid;
@@ -282,15 +289,14 @@ void read_DHT(){
   h = dht.readHumidity(); 
   t = dht.readTemperature();
   lcd.setCursor(0,0);
-  lcd.print("H:");
-  lcd.setCursor(2,0);
-  lcd.print(h);
-  lcd.setCursor(8,0);
-  lcd.write(1);
-  lcd.print("C:");
-  lcd.setCursor(11,0);
-  lcd.print(t);
-  delay(2000);
+   lcd.print("H:");
+   lcd.setCursor(2,0);
+   lcd.print(h);
+   lcd.setCursor(8,0);
+   lcd.write(1);
+   lcd.print("C:");
+   lcd.setCursor(11,0);
+   lcd.print(t);
 }
 
 void check() {
@@ -305,23 +311,19 @@ void check() {
 
 // tat bat canh bao
 void ON_OFF() {
-  int Pause = digitalRead(button);
-  if(Pause != macdinh) {
-    delay(5);
-    if(n == 0) {
-      dem +=1;
-    }
+   boolean pause = digitalRead(button);
+  if(pause != lastButton) {
+    lastButton = pause;
+    lastButton = millis();
   }
-  if( (dem%2) == 1 )
-   {
+  if(millis() - lastButton > timeOFF) {
+    buttonPress = pause;
+    Time = millis();
+  }
+  if(buttonPress == true) {
     digitalWrite(trangthai,LOW);
     digitalWrite(denbao,LOW); 
     digitalWrite(coi,LOW);
-   }
- else
-   {
-    digitalWrite(trangthai,HIGH);
-    check();
    }
 }
 // Hàm reset wifi
@@ -349,12 +351,12 @@ void setup() {
   lcd.backlight();
   lcd.createChar(1, degree);
   lcd.clear();
-
+  
   pinMode(denbao,OUTPUT);
   pinMode(trangthai,OUTPUT);
   pinMode(coi,OUTPUT);
   pinMode(resetWiFi,OUTPUT);
-  pinMode(button,INPUT_PULLUP);
+  pinMode(button,OUTPUT);
   digitalWrite(trangthai,HIGH);
 
   ConnectWifi();
@@ -404,18 +406,63 @@ void setup() {
       return;
     }
   }
-  check();
+
+  xTaskCreatePinnedToCore(
+                    ReadSensor,   /* Task function. */
+                    "Task1",     /* name of task. */
+                    10000,       /* Stack size of task */
+                    NULL,        /* parameter of the task */
+                    1,           /* priority of the task */
+                    &Task1,      /* Task handle to keep track of created task */
+                    0);          /* pin task to core 0 */  
+  
+  xTaskCreatePinnedToCore(
+                    sendClient,   /* Task function. */
+                    "Task2",     /* name of task. */
+                    10000,       /* Stack size of task */
+                    NULL,        /* parameter of the task */
+                    1,           /* priority of the task */
+                    &Task2,      /* Task handle to keep track of created task */
+                    1);          /* pin task to core 0 */  
+                      
+  xTaskCreatePinnedToCore(
+                    controller,   /* Task function. */
+                    "Task3",     /* name of task. */
+                    10000,       /* Stack size of task */
+                    NULL,        /* parameter of the task */
+                    1,           /* priority of the task */
+                    &Task3,      /* Task handle to keep track of created task */
+                    1);          /* pin task to core 1 */  
   server.begin();
+  lastTime = millis();
+}
+
+void ReadSensor(void * parameters) {
+  for(;;) {
+    read_DHT();
+    //read_GP2Y1014AU();
+    check();
+  }
+}
+
+void controller(void * parameters) {
+  for(;;) {
+  ON_OFF(); // tắt bật cảnh báo
+ // ResetWiFi(); //reset wifi
+  }
+}
+void sendClient(void * parameters) {
+  for(;;) {
+    if((unsigned long)(millis()- lastTime) > 2000){
+    lastTime = millis();
+    humi = String(h);
+    temp = String(t);
+    String result = "{\"temp\":\"" + temp + "\",\"humi\":\"" + humi + "\"}";
+    client.send("event", result);
+    }
+  }
 }
 
 void loop() {
-  read_DHT();
-  humi = String(h);
-  temp = String(t);
-  //read_GP2Y1014AU();
-  ON_OFF(); // tắt bật cảnh báo
- // ResetWiFi(); //reset wifi
-  String result = "{\"temp\":\"" + temp + "\",\"humi\":\"" + humi + "\"}";
-  Serial.println(result);
-  client.send("event", result);
+
 }
