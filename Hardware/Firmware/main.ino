@@ -7,7 +7,7 @@
 #include <DHT.h>
 #include <SocketIOClient.h>
 
-#define DHTPIN 36
+#define DHTPIN 34
 #define DHTTYPE DHT11
 
 TaskHandle_t Task1;
@@ -21,11 +21,14 @@ SocketIOClient client;
 
 int denbao = 14, trangthai = 27, coi = 12;
 
-int button = 34;
+int button = 32;
 unsigned long timeOFF = 2000; // thời gian chờ tắt cảnh báo 2s
 boolean lastButton = 0; // lưu trạng thái của phím tắt cảnh báo
 boolean buttonPress = 0; // lưu sự kiện của phím tắt cảnh báo
 unsigned long Time;
+
+String humiThres; //khai báo biến ngưỡng độ ẩm
+String tempThres; //khai báo biến ngưỡng nhiệt độ
 
 float h, t; // khai báo biến độ ẩm, nhiệt độ
 String humi, temp; // chuỗi độ ẩm, nhiệt độ
@@ -33,7 +36,7 @@ String humi, temp; // chuỗi độ ẩm, nhiệt độ
 int measurePin = 26;
 int ledPower = 25;
 
-int resetWiFi = 35;
+int resetWiFi = 4;
 unsigned long waitTime = 5000;
 boolean lastButtonStatus = 0; //Lưu trạng thái của phim reset
 boolean buttonLongPress = 0; // lưu sự kiện của phím reset
@@ -92,7 +95,7 @@ const char index_html[] PROGMEM = R"rawliteral(
   <style >
     .login{
       width: 1000px;
-      height: 400px;
+      height: 500px;
       border-radius: 15px;
       border: 1px solid grey;
       background-color: skyblue;    
@@ -111,6 +114,18 @@ const char index_html[] PROGMEM = R"rawliteral(
       border-radius: 5px;
       border: 1px solid grey;
     }
+  .input-text
+  {
+      width: 330px;
+      height: 40px;
+      border-radius: 4px;
+      margin-bottom: 15px;
+      margin-right: 15px;
+      margin-left: 15px;
+      border-radius: 5px;
+      border: 1px solid grey;
+      float: center;
+  }
     button{
       width: 400px;
       height: 35px;
@@ -130,8 +145,13 @@ const char index_html[] PROGMEM = R"rawliteral(
           <br>
           <input type="password" name="passWifi" placeholder="Mật khẩu">
           <br>
-      <input type="token" name="Token" placeholder="Token">
-      <br>
+          <input type="token" name="Token" placeholder="Token">
+          <br>
+          <input type="text" class="input-text" name="humithres" placeholder="Ngưỡng độ ẩm">
+          <input type="text" class="input-text" name ="tempthres"placeholder="Ngưỡng nhiệt độ">
+          <br>
+          <br>
+          <br>
         <button type= 'submit' >Connect</button>
         <form/>
       </div>
@@ -140,7 +160,6 @@ const char index_html[] PROGMEM = R"rawliteral(
       <p id="wifi">%WIFI%</p>
     </center>
 </body>
-
 </html>
 )rawliteral";
 
@@ -300,7 +319,7 @@ void read_DHT(){
 }
 
 void check() {
-   if(h>80 || t>60 || dustDensity > 80) {
+   if(h > atof(humiThres.c_str()) || t > atof(tempThres.c_str()) || dustDensity > 80) {
     digitalWrite(denbao,HIGH);
     digitalWrite(coi,HIGH);
    } else {
@@ -358,7 +377,7 @@ void setup() {
   pinMode(resetWiFi,OUTPUT);
   pinMode(button,OUTPUT);
   digitalWrite(trangthai,HIGH);
-
+   
   ConnectWifi();
   if(!connectwifi) {
     WiFi.mode(WIFI_MODE_APSTA);
@@ -376,6 +395,12 @@ void setup() {
       }
       if (request->hasParam("Token")) {
         Ntoken = request->getParam("Token")->value();
+      }
+      if (request->hasParam("humithres")) {
+        humiThres = request->getParam("humithres")->value();
+      }
+      if (request->hasParam("tempthres")) {
+        tempThres = request->getParam("tempthres")->value();
       }
       Serial.println(Nssid +"\n" + Npass + '\n' + Ntoken);
       
@@ -423,7 +448,7 @@ void setup() {
                     NULL,        /* parameter of the task */
                     1,           /* priority of the task */
                     &Task2,      /* Task handle to keep track of created task */
-                    1);          /* pin task to core 0 */  
+                    1);          /* pin task to core 1 */  
                       
   xTaskCreatePinnedToCore(
                     controller,   /* Task function. */
